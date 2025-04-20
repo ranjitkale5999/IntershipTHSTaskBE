@@ -8,7 +8,7 @@ public class IntershipThsApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(IntershipThsApplication.class, args);
-		System.out.println("intership THS");
+		System.out.println("Intership THS");
 	}
 
 }

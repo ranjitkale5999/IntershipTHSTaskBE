@@ -1,7 +1,9 @@
 package com.intership.intershipTHS.service;
 
+import com.intership.intershipTHS.dto.MobileNumberDto;
 import com.intership.intershipTHS.dto.StudentDto;
 import com.intership.intershipTHS.entity.Department;
+import com.intership.intershipTHS.entity.MobileNumber;
 import com.intership.intershipTHS.entity.Student;
 import com.intership.intershipTHS.mapper.StudentMapper;
 import com.intership.intershipTHS.repository.DepartmentRepo;
@@ -38,6 +40,10 @@ public class StudentService {
             } else {
                 errorMessages.add("Department not found with id " + deptId);
             }
+        }
+
+        if (student.getMobileNumbers() != null) {
+            student.getMobileNumbers().forEach(mobileNumber -> mobileNumber.setStudent(student));
         }
 
 
@@ -91,6 +97,9 @@ public class StudentService {
             }
         }
 
+        updateMobileNumbers(student, studentDto.getMobileNumbers());
+
+
         // If any errors collected, throw them all at once
         if (!errorMessages.isEmpty()) {
             throw new IllegalArgumentException(String.join(" | ", errorMessages));
@@ -101,5 +110,36 @@ public class StudentService {
         return studentMapper.maptoStudentDto(updatedStudent);
     }
 
+
+    private void updateMobileNumbers(Student student, List<MobileNumberDto> updatedNumbers) {
+        if (updatedNumbers == null) {
+            return;
+        }
+
+        List<MobileNumber> existingNumbers = student.getMobileNumbers();
+
+
+        existingNumbers.removeIf(existing ->
+                updatedNumbers.stream().noneMatch(updated ->
+                        updated.getId() != null && updated.getId().equals(existing.getId()))
+        );
+
+
+        for (MobileNumberDto updatedNumberDto : updatedNumbers) {
+            if (updatedNumberDto.getId() != null) {
+                existingNumbers.stream()
+
+                        .filter(existing -> existing.getId().equals(updatedNumberDto.getId()))
+                        .findFirst()
+                        .ifPresent(existing -> existing.setMobileNumber(updatedNumberDto.getMobileNumber()));
+            } else {
+
+                MobileNumber newMobile = new MobileNumber();
+                newMobile.setMobileNumber(updatedNumberDto.getMobileNumber());
+                newMobile.setStudent(student);
+                existingNumbers.add(newMobile);
+            }
+        }
+    }
 
 }

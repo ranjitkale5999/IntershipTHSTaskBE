@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -15,4 +17,5 @@ public class StudentDto {
     private int age;
     private DepartmentDto department;
     private List<MobileNumberDto> mobileNumbers;
+    private Set<TeacherDto> teachers = new HashSet<>();
 }

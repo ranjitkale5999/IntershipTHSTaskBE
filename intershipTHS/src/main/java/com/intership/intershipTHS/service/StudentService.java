@@ -5,17 +5,18 @@ import com.intership.intershipTHS.dto.StudentDto;
 import com.intership.intershipTHS.entity.Department;
 import com.intership.intershipTHS.entity.MobileNumber;
 import com.intership.intershipTHS.entity.Student;
+import com.intership.intershipTHS.entity.Teacher;
 import com.intership.intershipTHS.mapper.StudentMapper;
 import com.intership.intershipTHS.repository.DepartmentRepo;
 import com.intership.intershipTHS.repository.StudentRepository;
+import com.intership.intershipTHS.repository.TeacherRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.management.AttributeNotFoundException;
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
@@ -25,6 +26,9 @@ public class StudentService {
     private StudentMapper studentMapper;
     @Autowired
     private DepartmentRepo departmentRepository;
+
+    @Autowired
+    private TeacherRepo teacherRepo;
 
     @Transactional
     public StudentDto addStudent(StudentDto studentDto) throws Exception {
@@ -46,6 +50,30 @@ public class StudentService {
             student.getMobileNumbers().forEach(mobileNumber -> mobileNumber.setStudent(student));
         }
 
+        if (student.getTeachers() != null) {
+            List<Long> missingTeacherIds = new ArrayList<>();
+
+            Set<Teacher> managedTeachers = student.getTeachers().stream()
+                    .map(teacher -> {
+                        Optional<Teacher> optionalTeacher = teacherRepo.findById(teacher.getId());
+                        if (!optionalTeacher.isPresent()) {
+                            missingTeacherIds.add(teacher.getId());
+                            return null;
+                        }
+                        return optionalTeacher.get();
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            if (!missingTeacherIds.isEmpty()) {
+                String ids = missingTeacherIds.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(", "));
+                errorMessages.add("Teacher not found with id " + ids);
+            }
+
+            student.setTeachers(managedTeachers);
+        }
 
         if (!errorMessages.isEmpty()) {
             throw new IllegalArgumentException(String.join(" | ", errorMessages));
@@ -99,7 +127,30 @@ public class StudentService {
 
         updateMobileNumbers(student, studentDto.getMobileNumbers());
 
+        if (studentDto.getTeachers() != null) {
+            List<Long> missingTeacherIds = new ArrayList<>();
 
+            Set<Teacher> teachers = studentDto.getTeachers().stream()
+                    .map(teacherDto -> {
+                        Optional<Teacher> optionalTeacher = teacherRepo.findById(teacherDto.getId());
+                        if (!optionalTeacher.isPresent()) {
+                            missingTeacherIds.add(teacherDto.getId());
+                            return null;
+                        }
+                        return optionalTeacher.get();
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            if (!missingTeacherIds.isEmpty()) {
+                String ids = missingTeacherIds.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(", "));
+                errorMessages.add("Teacher not found with id " + ids);
+            }
+
+            student.setTeachers(teachers);
+        }
         // If any errors collected, throw them all at once
         if (!errorMessages.isEmpty()) {
             throw new IllegalArgumentException(String.join(" | ", errorMessages));

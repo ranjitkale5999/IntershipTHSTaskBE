@@ -5,7 +5,9 @@ import lombok.Data;
 import lombok.ToString;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Entity
@@ -27,5 +29,14 @@ public class Student {
         @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
         @JsonManagedReference
         private List<MobileNumber> mobileNumbers;
+
+        @ManyToMany
+        @JoinTable(
+                name = "student_teacher",
+                joinColumns = @JoinColumn(name = "student_id"),
+                inverseJoinColumns = @JoinColumn(name = "teacher_id")
+        )
+        @JsonManagedReference
+        private Set<Teacher> teachers = new HashSet<>();
 
 }

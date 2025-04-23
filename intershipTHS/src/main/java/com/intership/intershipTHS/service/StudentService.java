@@ -233,4 +233,10 @@ public class StudentService {
         }
 
     }
+
+    public List<StudentDto> getStudentsByCriteria(String area, String city){
+        List<Student> students= studentRepository.findStudentsByCustomCriteria(area,city);
+
+        return studentMapper.maptoStudentDtos(students) ;
+    }
 }

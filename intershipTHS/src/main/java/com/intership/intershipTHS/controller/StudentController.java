@@ -1,5 +1,6 @@
 package com.intership.intershipTHS.controller;
 
+import com.intership.intershipTHS.dto.ApiResponse;
 import com.intership.intershipTHS.dto.StudentDto;
 import com.intership.intershipTHS.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,5 +93,26 @@ public class StudentController {
             response.put("error", "Unexpected error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @GetMapping("/student/criteria")
+    //    public List<Student> getStudents(@PathVariable(value = "area", required = false) String area, @PathVariable(value="city", required = false) String city)
+    public ResponseEntity<ApiResponse<List<StudentDto>>> getStudents(
+            @RequestParam(value = "area", required = false) String area,
+            @RequestParam(value = "city", required = false) String city) {
+
+        if (city == null || city.trim().isEmpty()) city = "";
+        if (area == null || area.trim().isEmpty()) area = "";
+
+        List<StudentDto> students = studentService.getStudentsByCriteria(area, city);
+
+        ApiResponse<List<StudentDto>> response = new ApiResponse<>();
+        response.setStatus(students.isEmpty() ? 404 : 200);
+        response.setMessage(students.isEmpty()
+                ? "No students found for area: " + area + " and city: " + city
+                : "Students fetched successfully");
+        response.setData(students);
+        System.out.println(response);
+        return new ResponseEntity<>(response, students.isEmpty() ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 }

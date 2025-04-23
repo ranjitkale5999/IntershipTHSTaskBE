@@ -1,12 +1,11 @@
 package com.intership.intershipTHS.service;
 
+import com.intership.intershipTHS.dto.AddressDto;
 import com.intership.intershipTHS.dto.MobileNumberDto;
 import com.intership.intershipTHS.dto.StudentDto;
-import com.intership.intershipTHS.entity.Department;
-import com.intership.intershipTHS.entity.MobileNumber;
-import com.intership.intershipTHS.entity.Student;
-import com.intership.intershipTHS.entity.Teacher;
+import com.intership.intershipTHS.entity.*;
 import com.intership.intershipTHS.mapper.StudentMapper;
+import com.intership.intershipTHS.repository.AddressRepo;
 import com.intership.intershipTHS.repository.DepartmentRepo;
 import com.intership.intershipTHS.repository.StudentRepository;
 import com.intership.intershipTHS.repository.TeacherRepo;
@@ -29,6 +28,9 @@ public class StudentService {
 
     @Autowired
     private TeacherRepo teacherRepo;
+
+    @Autowired
+    private AddressRepo addressRepo;
 
     @Transactional
     public StudentDto addStudent(StudentDto studentDto) throws Exception {
@@ -73,6 +75,11 @@ public class StudentService {
             }
 
             student.setTeachers(managedTeachers);
+        }
+
+
+        if (student.getAddresses() != null) {
+            student.getAddresses().forEach(address -> address.setStudent(student));
         }
 
         if (!errorMessages.isEmpty()) {
@@ -156,6 +163,7 @@ public class StudentService {
             throw new IllegalArgumentException(String.join(" | ", errorMessages));
         }
 
+        updateAddresses(student,studentDto.getAddresses());
 
         Student updatedStudent = studentRepository.save(student);
         return studentMapper.maptoStudentDto(updatedStudent);
@@ -193,4 +201,36 @@ public class StudentService {
         }
     }
 
+    private  void updateAddresses(Student student, List<AddressDto> updateAddresses){
+        if(updateAddresses==null){
+            return;
+        }
+        List<Address> existingAddresses = student.getAddresses();
+
+        existingAddresses.removeIf(existing ->updateAddresses.stream()
+                .noneMatch(updated -> updated.getId()!=null && updated.getId().equals(existing.getId())));
+
+        for (AddressDto updateaddressDto: updateAddresses){
+            if (updateaddressDto.getId()!=null){
+                existingAddresses.stream().
+                        filter(existing-> existing.getId().equals(updateaddressDto.getId()))
+                        .findFirst()
+                        .ifPresent(existing -> {
+                            existing.setArea(updateaddressDto.getArea());
+                            existing.setCity(updateaddressDto.getCity());
+                            existing.setPincode(updateaddressDto.getPincode());
+
+                        });
+            }
+            else {
+                Address newAddress = new Address();
+                newAddress.setArea(updateaddressDto.getArea());
+                newAddress.setCity(updateaddressDto.getCity());
+                newAddress.setPincode(updateaddressDto.getPincode());
+                newAddress.setStudent(student);
+                existingAddresses.add(newAddress);
+            }
+        }
+
+    }
 }

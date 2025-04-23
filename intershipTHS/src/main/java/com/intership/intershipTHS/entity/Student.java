@@ -12,8 +12,7 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name ="student")
-//@ToString(exclude = {"mobileNumbers","teachers","addresses", "department"})
-@ToString(exclude = {"department","mobileNumbers"})
+@ToString(exclude = {"department","mobileNumbers","teachers","addresses"})
 public class Student {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,4 +38,7 @@ public class Student {
         @JsonManagedReference
         private Set<Teacher> teachers = new HashSet<>();
 
+        @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+        @JsonManagedReference
+        private List<Address> addresses;
 }

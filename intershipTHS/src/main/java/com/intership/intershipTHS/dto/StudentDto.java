@@ -18,4 +18,5 @@ public class StudentDto {
     private DepartmentDto department;
     private List<MobileNumberDto> mobileNumbers;
     private Set<TeacherDto> teachers = new HashSet<>();
+    private List<AddressDto> addresses;
 }

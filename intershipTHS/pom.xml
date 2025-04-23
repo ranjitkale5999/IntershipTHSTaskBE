@@ -56,6 +56,14 @@
 			<artifactId>mysql-connector-j</artifactId>
 			<version>8.0.33</version>
 		</dependency>
+		<!--		hibernate Validatior  Start-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!--		hibernate Validatior  End-->
+
 		<!-- Mapstruct and lombok dependency start -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>

@@ -1,5 +1,6 @@
 package com.intership.intershipTHS.controller;
 
+import com.intership.intershipTHS.Exceptions.ErrorResponse;
 import com.intership.intershipTHS.dto.FieldErrorDTO;
 import com.intership.intershipTHS.dto.TeacherDto;
 import com.intership.intershipTHS.service.TeacherService;
@@ -10,6 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,28 +25,78 @@ public class TeacherController {
 
 
     @PostMapping("/teacher")
-    public ResponseEntity<?> addTeacher(
-            @Valid @RequestBody TeacherDto teacherDto,
-            BindingResult bindingResult
-    ) {
-        if (bindingResult.hasErrors()) {
-            List<FieldErrorDTO> errors = bindingResult.getFieldErrors().stream()
-                    .map(fe -> new FieldErrorDTO(fe.getField(), fe.getDefaultMessage()))
-                    .collect(Collectors.toList());
-            return ResponseEntity
-                    .badRequest()
-                    .body(errors);
-        }
+    public ResponseEntity<ErrorResponse<TeacherDto>> addTeacher(@Valid @RequestBody TeacherDto teacherDto) {
+        TeacherDto savedTeacher = teacherService.addTeacher(teacherDto);
 
-        TeacherDto saved = teacherService.addTeacher(teacherDto);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(saved);
+        ErrorResponse<TeacherDto> response = new ErrorResponse<>(
+                LocalDateTime.now(),
+                HttpStatus.CREATED.value(),
+                "Teacher created successfully",
+                savedTeacher
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+
+    @GetMapping(value = "/teacher/{id}")
+    public ResponseEntity<ErrorResponse<?>> getByIdTeacher(@PathVariable Long id) {
+        TeacherDto teachers = teacherService.getByIdTeachers(id);
+
+        ErrorResponse<TeacherDto> response = new ErrorResponse<>(
+                LocalDateTime.now(),
+                HttpStatus.OK.value(),
+                "Teacher data fetched by Id :-" + id,
+                teachers
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/teacher")
-    public List<TeacherDto> getAllTeacher(){
-        return teacherService.getAllTeacher();
+    public ResponseEntity<ErrorResponse<List<TeacherDto>>> getAllTeacher() {
+        List<TeacherDto> teachers = teacherService.getAllTeacher();
+
+        ErrorResponse<List<TeacherDto>> response = new ErrorResponse<>(
+                LocalDateTime.now(),
+                HttpStatus.OK.value(),
+                "Teacher list fetched successfully",
+                teachers
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @DeleteMapping("/teacher/{id}")
+    public ResponseEntity<ErrorResponse<Object>> deleteTeacher(@PathVariable Long id) {
+        teacherService.deleteTeacher(id);
+
+        ErrorResponse<Object> response = new ErrorResponse<>(
+                LocalDateTime.now(),
+                HttpStatus.OK.value(),
+                "Teacher deleted successfully with ID: " + id,
+                null
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/teacher/{id}")
+    public ResponseEntity<ErrorResponse<TeacherDto>> updateTeacher(
+            @Valid @PathVariable Long id,
+            @Valid @RequestBody TeacherDto teacherDto
+    ) {
+        TeacherDto updatedTeacher = teacherService.updateTeacher(id, teacherDto);
+
+        ErrorResponse<TeacherDto> response = new ErrorResponse<>(
+                LocalDateTime.now(),
+                HttpStatus.OK.value(),
+                "Teacher updated successfully with ID: " + id,
+                updatedTeacher
+        );
+
+        return ResponseEntity.ok(response);
     }
 
 
